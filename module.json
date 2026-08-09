@@ -1,45 +1,26 @@
 {
-  "id": "jack-small-details",
-  "title": "Jack Small Details",
-  "description": "A personal collection of small quality-of-life improvements for Foundry VTT.",
-  "version": "1.5.0",
-  "authors": [
-    {
-      "name": "Jack"
-    }
-  ],
+  "id": "controls-config-conflict-resolver",
+  "title": "Controls Configuration Conflict Resolver",
+  "description": "Enhances the Controls Configuration with inline conflict rows, combo-key search, inline binding editing, and real-time edit warnings.",
+  "version": "1.1.0",
   "compatibility": {
     "minimum": 14,
-    "verified": 14
+    "verified": "14.360"
   },
   "esmodules": [
     "scripts/main.mjs"
   ],
   "styles": [
-    "styles/jack-small-details.css"
+    "styles/cccr.css",
+    "styles/theme-navy.css"
   ],
-  "languages": [
+  "authors": [
     {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
+      "name": "Jack Sands"
     }
   ],
-  "relationships": {
-    "requires": [
-      {
-        "id": "lib-wrapper",
-        "type": "module",
-        "manifest": "https://github.com/ruipin/fvtt-lib-wrapper/releases/latest/download/module.json",
-        "compatibility": {
-          "minimum": "1.13.0.0"
-        }
-      }
-    ]
-  },
   "flags": {},
-  "url": "https://github.com/jacksands/jack-small-details",
-  "manifest": "https://raw.githubusercontent.com/jacksands/jack-small-details/refs/heads/main/module.json",
+  "url": "https://github.com/jacksands/controls-config-conflict-resolver",
+  "manifest": "https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json",
   "download": "https://github.com/jacksands/controls-config-conflict-resolver/archive/refs/heads/main.zip"
 }
-
