@@ -1,0 +1,229 @@
+/* ==========================================================================
+   CCCR — Midnight Navy & Warm Sand Theme
+   Applied when body has class "cccr-theme-navy"
+   Colors from the Navy + Sand palette:
+     Deep Navy    #1B2944   Navy Ink   #243558   Ocean Blue #2E4470
+     Steel Blue   #3D5580   Dusk Blue  #6B8AB5
+     Rich Sand    #C09060   Gold Sand  #D4A870   Soft Beige #E8D0A8
+     Light Sand   #F0E0C0   Ivory Sand #F8F2E8
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Pulse animation — Sand accent instead of amber
+   --------------------------------------------------------------------------- */
+@keyframes cccr-icon-pulse-navy {
+  0%,  100% { filter: drop-shadow(0 0 0px  rgba(192, 144, 96, 0.0)); }
+  50%        { filter: drop-shadow(0 0 5px  rgba(192, 144, 96, 1.0))
+                       drop-shadow(0 0 10px rgba(192, 144, 96, 0.4)); }
+}
+
+body.cccr-theme-navy button.cccr-trigger {
+  color: #C09060;
+  border-color: rgba(192, 144, 96, 0.40);
+  animation-name: cccr-icon-pulse-navy;
+}
+body.cccr-theme-navy button.cccr-trigger:hover,
+body.cccr-theme-navy button.cccr-trigger.cccr-trigger-active {
+  border-color: rgba(192, 144, 96, 0.75);
+  filter: drop-shadow(0 0 5px rgba(192, 144, 96, 0.85));
+}
+
+/* ---------------------------------------------------------------------------
+   Context note
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy .cccr-context-note {
+  background: rgba(61, 85, 128, 0.20);
+  border-left-color: rgba(107, 138, 181, 0.55);
+  color: #E8D0A8;
+}
+body.cccr-theme-navy .cccr-context-note i.fa-circle-info { color: #6B8AB5; }
+body.cccr-theme-navy .cccr-note-x { color: #6B8AB5; }
+body.cccr-theme-navy .cccr-note-x:hover { color: #F0E0C0; }
+
+/* ---------------------------------------------------------------------------
+   Combo search
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy .cccr-combo-row {
+  background: rgba(61, 85, 128, 0.15);
+  border-color: rgba(107, 138, 181, 0.20);
+}
+body.cccr-theme-navy .cccr-combo-row:focus-within {
+  border-color: #C09060;
+  background: rgba(192, 144, 96, 0.06);
+}
+body.cccr-theme-navy .cccr-combo-row > i.fa-keyboard { color: #6B8AB5; }
+body.cccr-theme-navy .cccr-combo-input              { color: #F8F2E8; }
+body.cccr-theme-navy .cccr-combo-input::placeholder { color: #3D5580; }
+body.cccr-theme-navy .cccr-combo-clear              { color: #3D5580; }
+body.cccr-theme-navy .cccr-combo-clear:hover        { color: #E8D0A8; }
+
+body.cccr-theme-navy .cccr-combo-results {
+  background: #1B2944;
+  border-color: rgba(192, 144, 96, 0.22);
+}
+body.cccr-theme-navy .cccr-combo-results::-webkit-scrollbar-thumb { background: #243558; }
+body.cccr-theme-navy .cccr-results-empty { color: #3D5580; }
+body.cccr-theme-navy .cccr-result-row:hover { background: rgba(192, 144, 96, 0.06); }
+body.cccr-theme-navy .cccr-result-name     { color: #F8F2E8; }
+body.cccr-theme-navy .cccr-result-pkg      { color: #D4A870; }
+
+/* ---------------------------------------------------------------------------
+   Combo filter highlight/dim
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy li.cccr-filter-match {
+  outline-color: rgba(192, 144, 96, 0.40);
+}
+
+/* ---------------------------------------------------------------------------
+   Find / Go button and key badge
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy .cccr-find-btn {
+  background: rgba(192, 144, 96, 0.10);
+  border-color: rgba(192, 144, 96, 0.28);
+  color: #C09060;
+}
+body.cccr-theme-navy .cccr-find-btn:hover {
+  background: rgba(192, 144, 96, 0.20);
+  border-color: rgba(192, 144, 96, 0.55);
+  color: #F0E0C0;
+}
+body.cccr-theme-navy kbd.cccr-badge,
+body.cccr-theme-navy .cccr-badge {
+  background: #1B2944;
+  border-color: #3D5580;
+  color: #E8D0A8;
+}
+body.cccr-theme-navy .cccr-btn-edit {
+  background: rgba(212, 168, 112, 0.15) !important;
+  border-color: rgba(212, 168, 112, 0.40) !important;
+  color: #D4A870 !important;
+}
+body.cccr-theme-navy .cccr-btn-edit:hover {
+  background: rgba(212, 168, 112, 0.28) !important;
+  border-color: rgba(212, 168, 112, 0.65) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Expansion panel
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy li.cccr-expand-panel {
+  background: rgba(18, 26, 48, 0.90);
+  border-left-color: #C09060;
+  border-bottom-color: rgba(192, 144, 96, 0.12);
+}
+body.cccr-theme-navy .cccr-expand-row:hover { background: rgba(192, 144, 96, 0.05); }
+body.cccr-theme-navy .cccr-expand-name     { color: #F8F2E8; }
+body.cccr-theme-navy .cccr-expand-module   { color: #D4A870; }
+body.cccr-theme-navy .cccr-expand-self-label { color: #3D5580; }
+body.cccr-theme-navy kbd.cccr-badge-warn {
+  background: #1B2944;
+  border-color: #3D5580;
+  color: #E8D0A8;
+}
+body.cccr-theme-navy kbd.cccr-badge-warn i { color: #C09060; }
+
+body.cccr-theme-navy .cccr-expand-nav {
+  background: rgba(192, 144, 96, 0.10);
+  border-color: rgba(192, 144, 96, 0.25);
+  color: #C09060;
+}
+body.cccr-theme-navy .cccr-expand-nav:hover {
+  background: rgba(192, 144, 96, 0.22);
+  border-color: rgba(192, 144, 96, 0.55);
+  color: #F0E0C0;
+}
+
+/* ---------------------------------------------------------------------------
+   Inline edit
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy .cccr-key-input {
+  background: #121C33 !important;
+  border-color: rgba(192, 144, 96, 0.50) !important;
+  color: #E8D0A8 !important;
+}
+body.cccr-theme-navy .cccr-key-input:focus { border-color: #C09060 !important; }
+
+/* ---------------------------------------------------------------------------
+   Sidebar badge
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy button.cccr-badge-conflicts {
+  background: rgba(200, 70, 40, 0.12);
+  border-color: rgba(200, 70, 40, 0.30);
+}
+body.cccr-theme-navy button.cccr-badge-conflicts:hover {
+  background: rgba(200, 70, 40, 0.22);
+  border-color: rgba(200, 70, 40, 0.55);
+}
+body.cccr-theme-navy div.cccr-badge-ok {
+  background: rgba(90, 180, 110, 0.08);
+  border-color: rgba(90, 180, 110, 0.20);
+}
+
+/* ---------------------------------------------------------------------------
+   Highlight flash animation — Sand glow
+   --------------------------------------------------------------------------- */
+@keyframes cccr-highlight-flash-navy {
+  0%   { outline: 2px solid rgba(192, 144, 96, 0.0); background: transparent; }
+  20%  { outline: 2px solid rgba(192, 144, 96, 1.0); background: rgba(192, 144, 96, 0.12); }
+  80%  { outline: 2px solid rgba(192, 144, 96, 0.6); background: rgba(192, 144, 96, 0.06); }
+  100% { outline: 2px solid rgba(192, 144, 96, 0.0); background: transparent; }
+}
+body.cccr-theme-navy .cccr-highlight-action {
+  animation: cccr-highlight-flash-navy 3.5s ease-out forwards !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Standalone Conflict Viewer
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy #cccr-viewer-root              { background: #1B2944; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vtoolbar {
+  background: linear-gradient(135deg, #121C33, #1B2944);
+  border-bottom-color: #C09060;
+}
+body.cccr-theme-navy #cccr-viewer-root .cccr-vlist-header { background: #243558; border-bottom-color: #2E4470; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vrow         { border-bottom-color: #243558; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vrow:hover   { background: #243558; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vname        { color: #F8F2E8; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vpkg         { color: #D4A870; }
+body.cccr-theme-navy #cccr-viewer-root #cccr-vopen-controls {
+  background: linear-gradient(135deg, #C09060, #A87848);
+  color: #F8F2E8;
+}
+body.cccr-theme-navy #cccr-viewer-root .cccr-vlist {
+  scrollbar-color: #243558 #1B2944;
+}
+body.cccr-theme-navy #cccr-viewer-root .cccr-vlist::-webkit-scrollbar-track { background: #1B2944; }
+body.cccr-theme-navy #cccr-viewer-root .cccr-vlist::-webkit-scrollbar-thumb { background: #243558; }
+
+/* ---------------------------------------------------------------------------
+   Instructions Viewer
+   --------------------------------------------------------------------------- */
+body.cccr-theme-navy #cccr-instr-root,
+body.cccr-theme-navy .cccr-instr-body {
+  background: #1B2944;
+  color: #E8D0A8;
+  scrollbar-color: #243558 #1B2944;
+}
+body.cccr-theme-navy .cccr-instr-body::-webkit-scrollbar-track { background: #1B2944; }
+body.cccr-theme-navy .cccr-instr-body::-webkit-scrollbar-thumb { background: #243558; }
+body.cccr-theme-navy .cccr-instr-body h1  { color: #F0E0C0; border-bottom-color: #C09060; }
+body.cccr-theme-navy .cccr-instr-body h2  { color: #D4A870; border-bottom-color: rgba(192,144,96,0.20); }
+body.cccr-theme-navy .cccr-instr-body h3  { color: #C09060; }
+body.cccr-theme-navy .cccr-instr-body p   { color: #E8D0A8; }
+body.cccr-theme-navy .cccr-instr-body strong { color: #F8F2E8; }
+body.cccr-theme-navy .cccr-instr-body em  { color: #D4A870; }
+body.cccr-theme-navy .cccr-instr-body code {
+  background: #121C33;
+  border-color: #3D5580;
+  color: #E8D0A8;
+}
+body.cccr-theme-navy .cccr-instr-body pre {
+  background: #121C33;
+  border-color: #3D5580;
+}
+body.cccr-theme-navy .cccr-instr-body blockquote {
+  border-left-color: #C09060;
+  background: rgba(192,144,96,0.06);
+  color: #D4A870;
+}
+body.cccr-theme-navy .cccr-instr-body hr { border-top-color: #243558; }

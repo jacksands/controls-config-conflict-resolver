@@ -1,0 +1,728 @@
+/* ==========================================================================
+   Controls Configuration Conflict Resolver — cccr.css
+   All selectors scoped to .cccr-* or #cccr-*. No global selectors.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   PULSE GLOW ANIMATION (shared by trigger and badge)
+   ========================================================================== */
+
+@keyframes cccr-icon-pulse {
+  0%,  100% { filter: drop-shadow(0 0 0px  rgba(232, 160, 48, 0.0)); }
+  50%        { filter: drop-shadow(0 0 5px  rgba(232, 160, 48, 1.0))
+                       drop-shadow(0 0 10px rgba(232, 160, 48, 0.4)); }
+}
+
+@keyframes cccr-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cccr-highlight-flash {
+  0%   { outline: 2px solid rgba(243, 194, 103, 0.0); background: transparent; }
+  20%  { outline: 2px solid rgba(243, 194, 103, 1.0); background: rgba(243, 194, 103, 0.12); }
+  80%  { outline: 2px solid rgba(243, 194, 103, 0.6); background: rgba(243, 194, 103, 0.06); }
+  100% { outline: 2px solid rgba(243, 194, 103, 0.0); background: transparent; }
+}
+
+/* Applied temporarily after navigation to highlight the target action */
+.cccr-highlight-action {
+  animation: cccr-highlight-flash 3.5s ease-out forwards !important;
+  outline-offset: -2px !important;
+}
+
+
+/* ==========================================================================
+   OUR OWN CONFLICT TRIGGER BUTTON
+   Independent of Foundry's ⚠. Injected right after the existing ⚠ icon.
+   ========================================================================== */
+
+button.cccr-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0 2px;
+  background: none;
+  border: 1px solid rgba(232, 160, 48, 0.35);
+  border-radius: 4px;
+  color: #e8a030;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+  animation: cccr-icon-pulse 2s ease-in-out infinite;
+  /* Sit quietly alongside Foundry controls — don't disrupt layout */
+  line-height: 1;
+}
+
+button.cccr-trigger:hover {
+  animation: none;
+  background: rgba(232, 160, 48, 0.15);
+  border-color: rgba(232, 160, 48, 0.7);
+  filter: drop-shadow(0 0 4px rgba(232, 160, 48, 0.8));
+}
+
+button.cccr-trigger.cccr-trigger-active {
+  animation: none;
+  background: rgba(232, 160, 48, 0.20);
+  border-color: rgba(232, 160, 48, 0.80);
+  filter: drop-shadow(0 0 5px rgba(232, 160, 48, 0.9));
+}
+
+/* Fallback trigger (placed after action name when no ⚠ found) */
+button.cccr-trigger.cccr-trigger-fallback {
+  margin-left: 6px;
+  border-style: dashed;
+}
+
+
+/* ==========================================================================
+   EXPANSION PANEL — opens below the conflicting action row
+   ========================================================================== */
+
+li.cccr-expand-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(24, 18, 6, 0.85);
+  border-left: 3px solid #d4a574;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.12);
+  animation: cccr-slide-in 0.15s ease-out;
+}
+
+.cccr-expand-content {
+  padding: 2px 0;
+}
+
+/* Each conflict action shown as a synthesized row */
+.cccr-expand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px 7px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.1s;
+}
+
+.cccr-expand-row:last-child { border-bottom: none; }
+.cccr-expand-row:hover       { background: rgba(212, 165, 116, 0.05); }
+
+/* The action you clicked ⚠ on — slightly dimmed, it's the reference point */
+.cccr-expand-row.cccr-expand-self {
+  opacity: 0.55;
+}
+
+/* Left side: name + module */
+.cccr-expand-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cccr-expand-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5e6d3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Module name — prominent amber, the key visual identifier */
+.cccr-expand-module {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f3c267;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+/* Key combo badge inside expansion */
+kbd.cccr-badge-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #2e1a04;
+  border-color: #8a5a20;
+  color: #f5d9a8;
+  flex-shrink: 0;
+}
+
+kbd.cccr-badge-warn i {
+  color: #e8a030;
+  font-size: 10px;
+}
+
+/* Edit button (pen icon) — distinct amber fill */
+.cccr-btn-edit {
+  background: rgba(243, 194, 103, 0.15) !important;
+  border-color: rgba(243, 194, 103, 0.40) !important;
+  color: #f3c267 !important;
+}
+.cccr-btn-edit:hover {
+  background: rgba(243, 194, 103, 0.28) !important;
+  border-color: rgba(243, 194, 103, 0.65) !important;
+}
+
+/* Navigate → button */
+.cccr-expand-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  background: rgba(212, 165, 116, 0.10);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 4px;
+  color: #d4a574;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.cccr-expand-nav:hover {
+  background: rgba(212, 165, 116, 0.22);
+  border-color: rgba(212, 165, 116, 0.55);
+  color: #f5d9a8;
+}
+
+/* "← this one" label on the self row */
+.cccr-expand-self-label {
+  font-size: 10px;
+  color: #6a6a8a;
+  font-style: italic;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 26px;
+  text-align: center;
+}
+
+
+/* ==========================================================================
+   CONTEXT NOTE
+   ========================================================================== */
+
+.cccr-context-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 8px 0;
+  padding: 7px 12px;
+  background: rgba(180, 140, 70, 0.10);
+  border-left: 3px solid rgba(200, 160, 80, 0.55);
+  border-radius: 0 5px 5px 0;
+  font-size: 11px;
+  color: #d4c09a;
+  line-height: 1.5;
+}
+
+.cccr-context-note i.fa-circle-info { color: #c9a876; margin-top: 2px; flex-shrink: 0; }
+.cccr-context-note span             { flex: 1; }
+
+.cccr-note-x {
+  background: none; border: none; color: #c9a876;
+  cursor: pointer; padding: 0 2px; flex-shrink: 0;
+  opacity: 0.7; transition: opacity 0.15s; line-height: 1;
+}
+.cccr-note-x:hover { opacity: 1; color: #f5e6d3; }
+
+
+/* ==========================================================================
+   COMBO SEARCH — sidebar
+   ========================================================================== */
+
+.cccr-combo-wrap { margin: 6px 0 4px; }
+
+.cccr-combo-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 5px;
+  transition: border-color 0.15s;
+}
+
+.cccr-combo-row:focus-within {
+  border-color: #d4a574;
+  background: rgba(212, 165, 116, 0.06);
+}
+
+.cccr-combo-row > i.fa-keyboard { color: #c9a876; font-size: 12px; flex-shrink: 0; }
+
+.cccr-combo-input {
+  flex: 1;
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #f5e6d3;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 0;
+  padding: 0 !important;
+  height: auto !important;
+}
+.cccr-combo-input::placeholder { color: #6a6a8a; font-weight: 400; font-style: italic; }
+
+.cccr-combo-clear {
+  background: none; border: none; color: #6a6a8a;
+  cursor: pointer; padding: 0; font-size: 12px; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.cccr-combo-clear:hover { color: #e8d5c0; }
+
+.cccr-combo-results {
+  margin-top: 4px;
+  background: #1e1e30;
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 5px;
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.cccr-combo-results::-webkit-scrollbar       { width: 5px; }
+.cccr-combo-results::-webkit-scrollbar-track { background: #1e1e30; }
+.cccr-combo-results::-webkit-scrollbar-thumb { background: #3a2a1a; border-radius: 3px; }
+
+.cccr-results-empty {
+  padding: 10px 12px; font-size: 11px; color: #6a6a8a;
+  display: flex; align-items: center; gap: 7px;
+}
+
+.cccr-result-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 8px; transition: background 0.1s;
+}
+.cccr-result-row:last-child { border-bottom: none; }
+.cccr-result-row:hover      { background: rgba(212, 165, 116, 0.06); }
+
+.cccr-result-info { flex: 1; min-width: 0; }
+.cccr-result-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.cccr-result-name {
+  display: block; font-size: 12px; font-weight: 600; color: #f5e6d3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cccr-result-pkg {
+  display: block; font-size: 10px; color: #f3c267; font-style: italic;
+  margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+
+/* ==========================================================================
+   COMBO FILTER — highlight / dim action rows
+   ========================================================================== */
+
+li.cccr-filter-match {
+  outline: 1px solid rgba(212, 165, 116, 0.35);
+  outline-offset: -1px;
+}
+li.cccr-filter-dim { opacity: 0.3; }
+
+
+/* ==========================================================================
+   SHARED: FIND BUTTON & KEY BADGE
+   ========================================================================== */
+
+.cccr-find-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 9px;
+  background: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.30);
+  border-radius: 4px;
+  color: #d4a574; font-size: 11px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cccr-find-btn:hover {
+  background: rgba(212, 165, 116, 0.22);
+  border-color: rgba(212, 165, 116, 0.55);
+  color: #f5d9a8;
+}
+
+kbd.cccr-badge, .cccr-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  background: #2e2016;
+  border: 1px solid #5a3a18;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px; font-weight: 700; color: #f5d9a8;
+  white-space: nowrap; flex-shrink: 0; vertical-align: middle;
+}
+
+
+/* ==========================================================================
+   REAL-TIME EDIT WARNING
+   ========================================================================== */
+
+.cccr-edit-warning {
+  font-size: 11px; padding: 4px 8px; border-radius: 4px;
+  margin-top: 3px; display: flex; align-items: center;
+  gap: 6px; line-height: 1.4;
+}
+.cccr-edit-conflict {
+  background: rgba(220, 60, 40, 0.14); color: #f07060;
+  border-left: 2px solid rgba(220, 60, 40, 0.5);
+}
+.cccr-edit-conflict i { color: #e84030; flex-shrink: 0; }
+.cccr-edit-ok {
+  background: rgba(144, 255, 216, 0.08); color: #90ffd8;
+  border-left: 2px solid rgba(144, 255, 216, 0.3);
+}
+.cccr-edit-ok i { color: #90ffd8; flex-shrink: 0; }
+.cccr-edit-warning strong { color: #f5e6d3; }
+.cccr-edit-warning em     { color: #c9a876; font-style: italic; }
+
+
+/* ==========================================================================
+   SIDEBAR BADGE
+   ========================================================================== */
+
+.cccr-sidebar-badge {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin-top: auto; flex-shrink: 0;
+}
+.cccr-badge-btn {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 6px 10px; border-radius: 5px;
+  font-size: 12px; font-weight: 700; transition: all 0.15s; text-align: left;
+}
+button.cccr-badge-conflicts {
+  background: rgba(220, 60, 40, 0.13); color: #f07060;
+  border: 1px solid rgba(220, 60, 40, 0.32); cursor: pointer;
+}
+button.cccr-badge-conflicts:hover {
+  background: rgba(220, 60, 40, 0.22);
+  border-color: rgba(220, 60, 40, 0.55); transform: translateX(2px);
+}
+button.cccr-badge-conflicts i { color: #e84030; }
+div.cccr-badge-ok {
+  background: rgba(144, 255, 216, 0.07); color: #90ffd8;
+  border: 1px solid rgba(144, 255, 216, 0.18); cursor: default;
+}
+div.cccr-badge-ok i { color: #90ffd8; }
+
+
+/* ==========================================================================
+   STANDALONE CONFLICT VIEWER WINDOW (#cccr-conflict-viewer)
+   ========================================================================== */
+
+#cccr-conflict-viewer * { box-sizing: border-box; }
+
+#cccr-viewer-root {
+  display: flex; flex-direction: column; height: 100%;
+  background: #1a1a2e; color: #e8d5c0;
+  font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 13px;
+}
+
+#cccr-viewer-root .cccr-viewer-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; color: #90ffd8; font-size: 15px; font-weight: 600;
+}
+#cccr-viewer-root .cccr-viewer-empty i { font-size: 36px; opacity: 0.8; }
+
+#cccr-viewer-root .cccr-vtoolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 9px 16px;
+  background: linear-gradient(135deg, #2a1a08, #1e1408);
+  border-bottom: 2px solid #d4a574; flex-shrink: 0;
+}
+#cccr-viewer-root .cccr-vcount {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 800; color: #f07060;
+}
+#cccr-viewer-root .cccr-vcount i { color: #e84030; }
+
+#cccr-viewer-root #cccr-vopen-controls {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border: none; border-radius: 5px;
+  background: linear-gradient(135deg, #d4a574, #c99456);
+  color: #1a1410; font-size: 12px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+}
+#cccr-viewer-root #cccr-vopen-controls:hover {
+  background: linear-gradient(135deg, #e8c090, #d4a574);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(212, 165, 116, 0.4);
+}
+
+#cccr-viewer-root .cccr-vlist-wrap {
+  display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;
+}
+#cccr-viewer-root .cccr-vlist-header {
+  display: flex; align-items: center; padding: 5px 16px;
+  background: #22223a; border-bottom: 1px solid #2e2e4a;
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.2px; color: #c9a876; flex-shrink: 0;
+}
+#cccr-viewer-root .cccr-vlist { overflow-y: auto; overflow-x: hidden; }
+#cccr-viewer-root .cccr-vlist::-webkit-scrollbar       { width: 7px; }
+#cccr-viewer-root .cccr-vlist::-webkit-scrollbar-track { background: #1a1a2e; }
+#cccr-viewer-root .cccr-vlist::-webkit-scrollbar-thumb { background: #3a2a1a; border-radius: 4px; }
+#cccr-viewer-root .cccr-vlist::-webkit-scrollbar-thumb:hover { background: #d4a574; }
+#cccr-viewer-root .cccr-vlist { scrollbar-width: thin; scrollbar-color: #3a2a1a #1a1a2e; }
+
+#cccr-viewer-root .cccr-vrow {
+  display: flex; align-items: center; padding: 9px 16px;
+  gap: 10px; border-bottom: 1px solid #22223a; transition: background 0.1s;
+}
+#cccr-viewer-root .cccr-vrow:hover { background: #22223a; }
+#cccr-viewer-root .cccr-vcol-combo  { width: 130px; flex-shrink: 0; }
+#cccr-viewer-root .cccr-vcol-action { flex: 1; min-width: 0; }
+#cccr-viewer-root .cccr-vcol-vs {
+  width: 26px; text-align: center; font-size: 10px;
+  font-weight: 800; color: #5a5a7a; flex-shrink: 0; text-transform: uppercase;
+}
+#cccr-viewer-root .cccr-vname {
+  font-size: 13px; font-weight: 600; color: #f5e6d3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+}
+#cccr-viewer-root .cccr-vpkg {
+  font-size: 10px; color: #f3c267; font-style: italic;
+  margin-top: 2px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; display: block;
+}
+
+
+/* ==========================================================================
+   INSTRUCTIONS VIEWER  (#cccr-instructions / #cccr-instr-root)
+   ========================================================================== */
+
+#cccr-instructions * { box-sizing: border-box; }
+
+#cccr-instr-root { height: 100%; background: #1a1410; }
+
+.cccr-instr-body {
+  padding: 22px 26px;
+  color: #d4c0a8;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  background: #1a1410;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3a2a1a #1a1410;
+}
+
+.cccr-instr-body::-webkit-scrollbar         { width: 7px; }
+.cccr-instr-body::-webkit-scrollbar-track   { background: #1a1410; }
+.cccr-instr-body::-webkit-scrollbar-thumb   { background: #3a2a1a; border-radius: 4px; }
+.cccr-instr-body::-webkit-scrollbar-thumb:hover { background: #d4a574; }
+
+.cccr-instr-body h1 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #f5d9a8;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d4a574;
+}
+
+.cccr-instr-body h2 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f3c267;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 22px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+}
+
+.cccr-instr-body h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4a574;
+  margin: 14px 0 5px;
+}
+
+.cccr-instr-body p {
+  margin: 0 0 9px;
+}
+
+.cccr-instr-body strong { color: #f5e6d3; }
+.cccr-instr-body em     { color: #c9a876; font-style: italic; }
+
+.cccr-instr-body code {
+  background: #2a2010;
+  border: 1px solid #4a3a18;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #f5d9a8;
+}
+
+.cccr-instr-body pre {
+  background: #1e1608;
+  border: 1px solid #4a3a18;
+  border-radius: 5px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  margin: 8px 0 12px;
+}
+
+.cccr-instr-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+}
+
+.cccr-instr-body ul {
+  margin: 0 0 10px 0;
+  padding-left: 20px;
+}
+
+.cccr-instr-body li { margin: 3px 0; }
+
+.cccr-instr-body hr {
+  border: none;
+  border-top: 1px solid #3a2a1a;
+  margin: 18px 0;
+}
+
+.cccr-instr-body blockquote {
+  border-left: 3px solid #d4a574;
+  margin: 0 0 10px;
+  padding: 6px 12px;
+  background: rgba(212, 165, 116, 0.06);
+  color: #c9a876;
+  font-style: italic;
+  border-radius: 0 4px 4px 0;
+}
+
+
+/* ==========================================================================
+   INLINE EDIT — appears inside the expansion panel row
+   ========================================================================== */
+
+.cccr-expand-badge-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cccr-inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cccr-key-input {
+  width: 120px;
+  background: #1a1208 !important;
+  border: 1px solid rgba(212, 165, 116, 0.5) !important;
+  border-radius: 4px !important;
+  color: #f5d9a8 !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 7px !important;
+  cursor: pointer !important;
+  height: auto !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.cccr-key-input::placeholder { color: #6a5a3a; font-style: italic; font-weight: 400; }
+.cccr-key-input:focus { border-color: rgba(212, 165, 116, 0.9) !important; }
+
+.cccr-save-key, .cccr-cancel-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.cccr-save-key {
+  background: rgba(90, 200, 100, 0.12);
+  border-color: rgba(90, 200, 100, 0.35);
+  color: #70d880;
+}
+.cccr-save-key:hover:not(:disabled) {
+  background: rgba(90, 200, 100, 0.25);
+  border-color: rgba(90, 200, 100, 0.65);
+}
+.cccr-save-key:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cccr-cancel-key {
+  background: rgba(180, 60, 40, 0.12);
+  border-color: rgba(180, 60, 40, 0.35);
+  color: #e07060;
+}
+.cccr-cancel-key:hover {
+  background: rgba(180, 60, 40, 0.25);
+  border-color: rgba(180, 60, 40, 0.65);
+}
+
+.cccr-inline-warning {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.3;
+  margin-top: 3px;
+}
+
+.cccr-inline-warn {
+  background: rgba(220, 80, 40, 0.13);
+  color: #f07060;
+  border-left: 2px solid rgba(220, 80, 40, 0.5);
+}
+.cccr-inline-warn i { color: #e84030; flex-shrink: 0; }
+
+.cccr-inline-ok {
+  background: rgba(100, 220, 120, 0.08);
+  color: #70d880;
+  border-left: 2px solid rgba(100, 220, 120, 0.3);
+}
+.cccr-inline-ok i { color: #70d880; flex-shrink: 0; }
+
+/* Lock badge for uneditable bindings */
+.cccr-locked-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #5a5a7a;
+  font-size: 11px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}

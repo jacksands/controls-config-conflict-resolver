@@ -1,0 +1,20 @@
+{
+  "id": "controls-config-conflict-resolver",
+  "title": "Controls Configuration Conflict Resolver",
+  "description": "Enhances the Controls Configuration with inline conflict rows, combo-key search, inline binding editing, and real-time edit warnings.",
+  "version": "1.1.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14.360"
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/cccr.css",
+    "styles/theme-navy.css"
+  ],
+  "authors": [
+    { "name": "Jack Sands" }
+  ]
+}
