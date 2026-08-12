@@ -117,7 +117,8 @@ The **Conflict Overview** and **Instructions** are accessible to all players —
 
 ## Screenshots
 
-*(Coming soon)*
+<img width="886" height="770" alt="image" src="https://github.com/user-attachments/assets/e0a7491c-dd8f-40db-b028-f85dcd708eb7" />
+
 
 ---
 
