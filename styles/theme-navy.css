@@ -162,15 +162,7 @@ body.cccr-theme-navy div.cccr-badge-ok {
 /* ---------------------------------------------------------------------------
    Highlight flash animation — Sand glow
    --------------------------------------------------------------------------- */
-@keyframes cccr-highlight-flash-navy {
-  0%   { outline: 2px solid rgba(192, 144, 96, 0.0); background: transparent; }
-  20%  { outline: 2px solid rgba(192, 144, 96, 1.0); background: rgba(192, 144, 96, 0.12); }
-  80%  { outline: 2px solid rgba(192, 144, 96, 0.6); background: rgba(192, 144, 96, 0.06); }
-  100% { outline: 2px solid rgba(192, 144, 96, 0.0); background: transparent; }
-}
-body.cccr-theme-navy .cccr-highlight-action {
-  animation: cccr-highlight-flash-navy 3.5s ease-out forwards !important;
-}
+/* Green highlight works on both themes — no navy override needed */
 
 /* ---------------------------------------------------------------------------
    Standalone Conflict Viewer

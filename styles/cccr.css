@@ -20,16 +20,19 @@
 }
 
 @keyframes cccr-highlight-flash {
-  0%   { outline: 2px solid rgba(243, 194, 103, 0.0); background: transparent; }
-  20%  { outline: 2px solid rgba(243, 194, 103, 1.0); background: rgba(243, 194, 103, 0.12); }
-  80%  { outline: 2px solid rgba(243, 194, 103, 0.6); background: rgba(243, 194, 103, 0.06); }
-  100% { outline: 2px solid rgba(243, 194, 103, 0.0); background: transparent; }
+  0%   { outline: 3px solid rgba(0, 232, 120, 0.0); background: transparent; }
+  6%   { outline: 3px solid rgba(0, 232, 120, 1.0); background: rgba(0, 232, 120, 0.20); }
+  25%  { outline: 3px solid rgba(0, 232, 120, 0.85); background: rgba(0, 232, 120, 0.12); }
+  70%  { outline: 3px solid rgba(0, 232, 120, 0.40); background: rgba(0, 232, 120, 0.05); }
+  100% { outline: 3px solid rgba(0, 232, 120, 0.0); background: transparent; }
 }
 
 /* Applied temporarily after navigation to highlight the target action */
 .cccr-highlight-action {
-  animation: cccr-highlight-flash 3.5s ease-out forwards !important;
+  animation: cccr-highlight-flash 2.5s ease-out forwards !important;
   outline-offset: -2px !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 
@@ -650,7 +653,7 @@ div.cccr-badge-ok i { color: #90ffd8; }
 .cccr-key-input::placeholder { color: #6a5a3a; font-style: italic; font-weight: 400; }
 .cccr-key-input:focus { border-color: rgba(212, 165, 116, 0.9) !important; }
 
-.cccr-save-key, .cccr-cancel-key {
+.cccr-save-key, .cccr-cancel-key, .cccr-clear-key {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -688,6 +691,19 @@ div.cccr-badge-ok i { color: #90ffd8; }
   background: rgba(180, 60, 40, 0.25);
   border-color: rgba(180, 60, 40, 0.65);
 }
+
+/* 🗑 Clear/delete — removes the binding entirely (leaves action unassigned) */
+.cccr-clear-key {
+  background: rgba(140, 60, 20, 0.12);
+  border-color: rgba(180, 100, 40, 0.35);
+  color: #c87840;
+}
+.cccr-clear-key:hover {
+  background: rgba(180, 80, 20, 0.22);
+  border-color: rgba(200, 110, 40, 0.65);
+  color: #e09050;
+}
+.cccr-clear-key:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .cccr-inline-warning {
   font-size: 10px;

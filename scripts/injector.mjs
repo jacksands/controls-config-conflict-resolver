@@ -290,7 +290,12 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
     const controlsHTML = a.isSelf
       ? `<span class="cccr-expand-self-label">← this</span>`
       : a.editable
-        ? `<button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
+        ? `<button type="button" class="cccr-expand-go cccr-find-btn"
+                   data-namespace="${a.namespace}" data-action-id="${a.actionId}"
+                   title="Navigate to this action's category">
+             <i class="fa-solid fa-arrow-right"></i>
+           </button>
+           <button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
                    title="Edit this binding here — no navigation needed">
              <i class="fa-solid fa-pen-to-square"></i>
            </button>`
@@ -326,6 +331,19 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
     });
   });
 
+  // Wire up → Go buttons (navigate to that action's category)
+  panel.querySelectorAll(".cccr-expand-go").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const state = _getState();
+      if (state) state.pendingHighlight = {
+        actionId: btn.dataset.actionId, combo, autoEdit: false
+      };
+      const appEl = btn.closest(".window-app, .application") ?? element;
+      _navigateToCategory(btn.dataset.namespace, appEl, state);
+    });
+  });
+
   row.insertAdjacentElement("afterend", panel);
 }
 
@@ -356,6 +374,9 @@ function _startInlineEdit(expandRow, element) {
       <button type="button" class="cccr-save-key" title="Save new binding" disabled>
         <i class="fa-solid fa-check"></i>
       </button>
+      <button type="button" class="cccr-clear-key" title="Remove this binding (leave action unassigned)">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
       <button type="button" class="cccr-cancel-key" title="Cancel">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -364,6 +385,7 @@ function _startInlineEdit(expandRow, element) {
 
   const input     = badgeArea.querySelector(".cccr-key-input");
   const saveBtn   = badgeArea.querySelector(".cccr-save-key");
+  const clearBtn  = badgeArea.querySelector(".cccr-clear-key");
   const cancelBtn = badgeArea.querySelector(".cccr-cancel-key");
   const warning   = badgeArea.querySelector(".cccr-inline-warning");
 
@@ -438,28 +460,69 @@ function _startInlineEdit(expandRow, element) {
   cancelBtn.addEventListener("click", () => {
     _restoreBadgeArea(badgeArea, actionId, combo);
   });
+
+  // 🗑 Remove the binding entirely (leaves action unassigned for that combo)
+  clearBtn.addEventListener("click", async () => {
+    clearBtn.disabled = true;
+    clearBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+    const current  = game.keybindings.bindings.get(actionId) ?? [];
+    const filtered = current.filter(b =>
+      normalizeCombo(b.key, b.modifiers ?? []) !== combo
+    );
+
+    try {
+      await game.keybindings.set(namespace, actionName, filtered);
+      const app = _getState()?.controlsConfigApp;
+      if (app) setTimeout(() => app.render(), 100);
+    } catch (err) {
+      console.error("[CCCR] Failed to remove binding:", err);
+      warning.innerHTML = `<i class="fa-solid fa-xmark"></i> Failed: ${err.message}`;
+      warning.className = "cccr-inline-warning cccr-inline-warn";
+      warning.style.display = "";
+      clearBtn.disabled = false;
+      clearBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    }
+  });
 }
 
 function _restoreBadgeArea(badgeArea, actionId, combo) {
   const editable     = _isBindingEditable(actionId, combo);
   const comboDisplay = formatCombo(combo);
+  const [namespace]  = actionId.split(".");
+  const meta         = getActionMeta(actionId);
+
   badgeArea.innerHTML = `
     <kbd class="cccr-badge cccr-badge-warn">
       ${comboDisplay} <i class="fa-solid fa-triangle-exclamation"></i>
     </kbd>
     ${editable
-      ? `<button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
-                 title="Edit this binding here — no navigation needed">
+      ? `<button type="button" class="cccr-expand-go cccr-find-btn"
+                 data-namespace="${namespace}" data-action-id="${actionId}"
+                 title="Navigate to this action's category">
+           <i class="fa-solid fa-arrow-right"></i>
+         </button>
+         <button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
+                 title="Edit this binding here">
            <i class="fa-solid fa-pen-to-square"></i>
          </button>`
       : `<span class="cccr-locked-badge" title="This binding is locked">
            <i class="fa-solid fa-lock"></i>
          </span>`
     }`;
+
   badgeArea.querySelector(".cccr-expand-edit")?.addEventListener("click", e => {
     e.stopPropagation();
     const expandRow = badgeArea.closest(".cccr-expand-row");
     if (expandRow) _startInlineEdit(expandRow, null);
+  });
+
+  badgeArea.querySelector(".cccr-expand-go")?.addEventListener("click", e => {
+    e.stopPropagation();
+    const state = _getState();
+    if (state) state.pendingHighlight = { actionId, combo, autoEdit: false };
+    const appEl = badgeArea.closest(".window-app, .application") ?? document;
+    _navigateToCategory(namespace, appEl, state);
   });
 }
 
@@ -470,24 +533,66 @@ function _restoreBadgeArea(badgeArea, actionId, combo) {
 function _processPendingHighlight(element, state) {
   const { actionId, combo, autoEdit } = state.pendingHighlight;
   state.pendingHighlight = null;
-  requestAnimationFrame(() => {
+
+  let attempts = 0;
+  const MAX_ATTEMPTS = 8;
+  const INTERVAL_MS  = 150;
+
+  const tryHighlight = () => {
+    attempts++;
     for (const row of _actionRows(element)) {
       if (_actionId(row, element) !== actionId) continue;
-      row.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Scroll using the real scrollable container, not the window
+      _scrollToRow(row);
+
       row.classList.add("cccr-highlight-action");
-      setTimeout(() => row.classList.remove("cccr-highlight-action"), 3500);
+      setTimeout(() => row.classList.remove("cccr-highlight-action"), 2500);
+
       if (autoEdit) {
         setTimeout(() => {
-          const editBtns = [...row.querySelectorAll(
-            "a.control.edit, button[data-action='editBinding'], .fa-pen, .fa-edit, .fa-pen-to-square, " +
-            "button[title*='dit'], a[title*='dit']"
+          const btns = [...row.querySelectorAll(
+            "a.control.edit, button[data-action='editBinding'], " +
+            ".fa-pen, .fa-edit, .fa-pen-to-square, button[title*='dit'], a[title*='dit']"
           )];
-          (editBtns[0]?.closest("button, a") ?? editBtns[0])?.click();
+          (btns[0]?.closest("button,a") ?? btns[0])?.click();
         }, 400);
       }
-      break;
+      return; // success — stop retrying
     }
-  });
+
+    if (attempts < MAX_ATTEMPTS) setTimeout(tryHighlight, INTERVAL_MS);
+    // silently give up after max attempts
+  };
+
+  // Initial small delay so the DOM has time to render the new category
+  setTimeout(tryHighlight, 120);
+}
+
+/**
+ * Scroll a row into view using its real scrollable ancestor.
+ * scrollIntoView() on large lists often scrolls the window instead of the
+ * panel's inner scroll container, so the row never becomes visible.
+ */
+function _scrollToRow(row) {
+  // Walk up to find the first scrollable ancestor
+  let container = row.parentElement;
+  while (container && container !== document.body) {
+    const { overflow, overflowY } = window.getComputedStyle(container);
+    if (/auto|scroll/.test(overflow + overflowY) &&
+        container.scrollHeight > container.clientHeight) break;
+    container = container.parentElement;
+  }
+
+  if (container && container !== document.body) {
+    // Center the row inside the scrollable container
+    const targetTop = row.offsetTop - container.offsetTop;
+    const center    = targetTop - (container.clientHeight / 2) + (row.offsetHeight / 2);
+    container.scrollTo({ top: Math.max(0, center), behavior: "smooth" });
+  } else {
+    // Fallback for edge cases
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
 
 // ---------------------------------------------------------------------------
