@@ -2,7 +2,7 @@
   "id": "controls-config-conflict-resolver",
   "title": "Controls Configuration Conflict Resolver",
   "description": "Enhances the Controls Configuration with inline conflict rows, combo-key search, inline binding editing, real-time edit warnings, and GM-defined global keybinding policies.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "compatibility": {
     "minimum": "14",
     "verified": "14.360"
