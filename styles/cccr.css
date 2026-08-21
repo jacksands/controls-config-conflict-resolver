@@ -742,3 +742,136 @@ div.cccr-badge-ok i { color: #90ffd8; }
   opacity: 0.7;
   flex-shrink: 0;
 }
+
+
+/* ==========================================================================
+
+
+/* ==========================================================================
+
+
+/* ==========================================================================
+   GLOBAL KEYBINDING BUTTON (lock icon, inline with action name)
+   fa-lock-open = inactive or suggest mode (white)
+   fa-lock      = locked mode (red, pulsing)
+   ========================================================================== */
+
+@keyframes cccr-global-pulse-locked {
+  0%,  100% { filter: drop-shadow(0 0 0px  rgba(255, 60, 60, 0.0)); }
+  50%        { filter: drop-shadow(0 0 6px  rgba(255, 60, 60, 0.95))
+                       drop-shadow(0 0 12px rgba(255, 60, 60, 0.3)); }
+}
+
+/* Base — inactive (no global policy set): white, faint */
+button.cccr-global-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  padding: 0;
+  margin: 0 0 0 4px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.2;
+  transition: opacity 0.15s, color 0.15s, filter 0.15s;
+  vertical-align: middle;
+  line-height: 1;
+  position: relative;
+  top: -1px;
+}
+
+button.cccr-global-btn:not([style*="pointer-events"]):hover {
+  opacity: 0.55;
+}
+
+/* Active — Suggest / Default: white, clearly visible */
+button.cccr-global-btn.cccr-global-suggest {
+  opacity: 0.75;
+  color: #ffffff;
+}
+button.cccr-global-btn.cccr-global-suggest:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.5));
+}
+
+/* Active — Locked: RED with pulse glow */
+button.cccr-global-btn.cccr-global-locked {
+  opacity: 1;
+  color: #ff4040;
+  animation: cccr-global-pulse-locked 2s ease-in-out infinite;
+}
+button.cccr-global-btn.cccr-global-locked:hover {
+  animation: none;
+  color: #ff6666;
+  filter: drop-shadow(0 0 6px rgba(255, 60, 60, 1));
+}
+
+/* Overridden suggest: user has a custom binding over the GM default */
+button.cccr-global-btn.cccr-global-overridden {
+  animation: none;
+  opacity: 0.85;
+  color: #ffcc55;
+}
+button.cccr-global-btn.cccr-global-overridden:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px rgba(255, 204, 85, 0.7));
+}
+
+
+/* ==========================================================================
+   EDIT WARNING — GM policy notes (shown when Foundry edit input opens)
+   ========================================================================== */
+
+.cccr-edit-locked-note {
+  background: rgba(220, 60, 40, 0.10);
+  color: #f07060;
+  border-left: 2px solid rgba(220, 60, 40, 0.45);
+}
+.cccr-edit-locked-note i { color: #e84030; flex-shrink: 0; }
+
+.cccr-edit-suggest-note {
+  background: rgba(255, 255, 255, 0.07);
+  color: #cccccc;
+  border-left: 2px solid rgba(255, 255, 255, 0.25);
+}
+.cccr-edit-suggest-note i { color: #aaaaaa; flex-shrink: 0; }
+
+
+/* ==========================================================================
+   GLOBAL KEYBINDING DIALOG (DialogV2 content)
+   ========================================================================== */
+
+.cccr-global-dialog {
+  padding: 6px 2px;
+  font-size: 12px;
+  color: #d4c0a8;
+  line-height: 1.55;
+}
+.cccr-global-dialog p      { margin: 0 0 8px; }
+.cccr-global-dialog strong { color: #f5e6d3; }
+.cccr-global-dialog em     { color: #c9a876; font-style: italic; }
+
+.cccr-global-field {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.cccr-global-field > label {
+  font-size: 11px;
+  color: #c9a876;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cccr-global-hr   { border: none; border-top: 1px solid #3a2a1a; margin: 10px 0; }
+.cccr-global-hint { font-size: 10px; color: #7a6a50; font-style: italic; margin: 4px 0 0; }

@@ -2,10 +2,13 @@
  * main.mjs — Controls Configuration Conflict Resolver
  */
 
-import { getAllConflictPairs             } from "./detector.mjs";
-import { injectAll, _setStateRef         } from "./injector.mjs";
-import { ConflictViewer                  } from "./viewer.mjs";
-import { InstructionsViewer              } from "./instructions.mjs";
+import { getAllConflictPairs                        } from "./detector.mjs";
+import { injectAll, _setStateRef                   } from "./injector.mjs";
+import { ConflictViewer                            } from "./viewer.mjs";
+import { InstructionsViewer                        } from "./instructions.mjs";
+import {
+  registerGlobalSettings, applyGlobalBindings, SETTING_MODE
+} from "./globals.mjs";
 
 const MODULE_ID = "controls-config-conflict-resolver";
 
@@ -27,11 +30,34 @@ _setStateRef(STATE);
 
 Hooks.once("init", () => {
 
+  // Global keybinding world-side storage settings
+  registerGlobalSettings();
+
+  // Global enforcement mode: one setting for the whole module, GM-only.
+  // Registered here (not in globals.mjs) so onChange can access STATE.
+  game.settings.register(MODULE_ID, SETTING_MODE, {
+    name:       "Global Keybinding Enforcement",
+    hint:       "Whether GM-defined global keybindings are locked (players cannot change) or set as default (players can override). Applies to all global keybindings in this world.",
+    scope:      "world",
+    config:     true,
+    restricted: true,
+    type:       String,
+    choices: {
+      "locked":  "Locked — players cannot change GM keybindings",
+      "suggest": "Default — players receive GM keybindings but can override them"
+    },
+    default:  "locked",
+    onChange: () => {
+      STATE.controlsConfigApp?.render({ force: true });
+      applyGlobalBindings();
+    }
+  });
+
   // -- Instructions viewer --
   game.settings.registerMenu(MODULE_ID, "openInstructions", {
     name:       "Instructions",
     label:      "How to Use",
-    hint:       "Learn about conflict detection, combo search, and inline editing.",
+    hint:       "Learn about conflict detection, combo search, inline editing, and global keybindings.",
     icon:       "fa-solid fa-book-open",
     type:       InstructionsViewer,
     restricted: false
@@ -64,8 +90,8 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", () => {
-  // Apply saved theme on load
   _applyTheme(game.settings.get(MODULE_ID, "colorTheme"));
+  applyGlobalBindings();
 });
 
 function _applyTheme(theme) {

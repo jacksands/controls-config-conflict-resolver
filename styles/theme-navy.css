@@ -219,3 +219,50 @@ body.cccr-theme-navy .cccr-instr-body blockquote {
   color: #D4A870;
 }
 body.cccr-theme-navy .cccr-instr-body hr { border-top-color: #243558; }
+
+
+/* ==========================================================================
+
+
+/* ==========================================================================
+
+
+/* ==========================================================================
+   GLOBAL KEYBINDING BUTTON — Midnight Navy & Warm Sand Theme
+   Same white/red logic; red shifts slightly warmer to match the palette.
+   ========================================================================== */
+
+@keyframes cccr-global-pulse-locked-navy {
+  0%,  100% { filter: drop-shadow(0 0 0px  rgba(240, 70, 50, 0.0)); }
+  50%        { filter: drop-shadow(0 0 6px  rgba(240, 70, 50, 0.95)); }
+}
+
+body.cccr-theme-navy button.cccr-global-btn                     { color: #e8d0b0; opacity: 0.2; }
+body.cccr-theme-navy button.cccr-global-btn:not([style*="pointer-events"]):hover { opacity: 0.55; }
+
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-suggest { opacity: 0.75; color: #e8d0b0; }
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-suggest:hover { opacity: 1; }
+
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-locked {
+  color: #f05040;
+  animation-name: cccr-global-pulse-locked-navy;
+}
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-locked:hover {
+  color: #ff7060;
+  filter: drop-shadow(0 0 6px rgba(240, 70, 50, 1));
+}
+
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-overridden { color: #f0c060; opacity: 0.85; }
+body.cccr-theme-navy button.cccr-global-btn.cccr-global-overridden:hover { opacity: 1; }
+
+body.cccr-theme-navy .cccr-edit-locked-note  { background: rgba(200,70,40,0.10); color: #E07060; border-left-color: rgba(200,70,40,0.45); }
+body.cccr-theme-navy .cccr-edit-locked-note i { color: #C85040; }
+body.cccr-theme-navy .cccr-edit-suggest-note  { background: rgba(232,208,176,0.07); color: #B8A898; border-left-color: rgba(232,208,176,0.25); }
+body.cccr-theme-navy .cccr-edit-suggest-note i { color: #9A9080; }
+
+body.cccr-theme-navy .cccr-global-dialog         { color: #D4B890; }
+body.cccr-theme-navy .cccr-global-dialog strong  { color: #F8F2E8; }
+body.cccr-theme-navy .cccr-global-dialog em      { color: #C09060; }
+body.cccr-theme-navy .cccr-global-field > label  { color: #8AACCC; }
+body.cccr-theme-navy .cccr-global-hr             { border-top-color: #243558; }
+body.cccr-theme-navy .cccr-global-hint           { color: #3D5580; }

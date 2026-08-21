@@ -7,6 +7,12 @@ import {
   getActionsForCombo, buildConflictMap, getAllConflictPairs, getActionMeta
 } from "./detector.mjs";
 
+import {
+  getGlobalBindings, getUserOverrides, getGlobalMode,
+  setGlobalBinding, removeGlobalBinding,
+  markUserOverride, clearUserOverride
+} from "./globals.mjs";
+
 let _stateRef = null;
 export function _setStateRef(s) { _stateRef = s; }
 function _getState() { return _stateRef; }
@@ -27,6 +33,7 @@ export function injectAll(app, element, state, parts) {
     _injectContextNote(element, state);
     _watchForConflictIcons(element, state);
     _setupEditObserver(element, state);
+    _injectGlobalIcons(element, state);
     if (state.comboFilter) _highlightComboMatches(element, state.comboFilter);
     if (state.pendingHighlight) _processPendingHighlight(element, state);
   }
@@ -170,7 +177,7 @@ function _clearFilter(state, element) {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Conflict trigger icons — MutationObserver from i.fa-triangle-exclamation
+// 3. Conflict trigger icons
 // ---------------------------------------------------------------------------
 
 function _watchForConflictIcons(element, state) {
@@ -250,7 +257,7 @@ function _buildTrigger(actionId, combo, conflictsForCombo, row, element) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. Expansion panel — inline edit within the panel
+// 4. Expansion panel
 // ---------------------------------------------------------------------------
 
 function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, element) {
@@ -270,7 +277,6 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
   const ownMeta      = getActionMeta(actionId);
   const comboDisplay = formatCombo(combo);
 
-  // Build rows: self first (dimmed, no edit), then each conflict
   const actionList = [
     { ...ownMeta, isSelf: true },
     ...conflictsForCombo.map(c => ({
@@ -288,18 +294,18 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
       ${comboDisplay} <i class="fa-solid fa-triangle-exclamation"></i>
     </kbd>`;
     const controlsHTML = a.isSelf
-      ? `<span class="cccr-expand-self-label">← this</span>`
+      ? `<span class="cccr-expand-self-label">this</span>`
       : a.editable
         ? `<button type="button" class="cccr-expand-go cccr-find-btn"
                    data-namespace="${a.namespace}" data-action-id="${a.actionId}"
-                   title="Navigate to this action's category">
+                   title="Navigate to this action">
              <i class="fa-solid fa-arrow-right"></i>
            </button>
            <button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
-                   title="Edit this binding here — no navigation needed">
+                   title="Edit this binding inline">
              <i class="fa-solid fa-pen-to-square"></i>
            </button>`
-        : `<span class="cccr-locked-badge" title="This binding is locked and cannot be changed">
+        : `<span class="cccr-locked-badge" title="This binding is locked">
              <i class="fa-solid fa-lock"></i>
            </span>`;
 
@@ -322,7 +328,6 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
   panel.dataset.combo      = combo;
   panel.innerHTML = `<div class="cccr-expand-content">${rowsHTML}</div>`;
 
-  // Wire up Edit buttons
   panel.querySelectorAll(".cccr-expand-edit").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
@@ -331,14 +336,11 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
     });
   });
 
-  // Wire up → Go buttons (navigate to that action's category)
   panel.querySelectorAll(".cccr-expand-go").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const state = _getState();
-      if (state) state.pendingHighlight = {
-        actionId: btn.dataset.actionId, combo, autoEdit: false
-      };
+      if (state) state.pendingHighlight = { actionId: btn.dataset.actionId, combo, autoEdit: false };
       const appEl = btn.closest(".window-app, .application") ?? element;
       _navigateToCategory(btn.dataset.namespace, appEl, state);
     });
@@ -348,7 +350,7 @@ function _toggleExpansion(trigger, row, actionId, combo, conflictsForCombo, elem
 }
 
 // ---------------------------------------------------------------------------
-// 5. Inline edit — edit a binding directly inside the expansion row
+// 5. Inline edit
 // ---------------------------------------------------------------------------
 
 function _isBindingEditable(actionId, combo) {
@@ -371,10 +373,10 @@ function _startInlineEdit(expandRow, element) {
   badgeArea.innerHTML = `
     <div class="cccr-inline-edit">
       <input type="text" class="cccr-key-input" placeholder="Press a key…" readonly>
-      <button type="button" class="cccr-save-key" title="Save new binding" disabled>
+      <button type="button" class="cccr-save-key" title="Save" disabled>
         <i class="fa-solid fa-check"></i>
       </button>
-      <button type="button" class="cccr-clear-key" title="Remove this binding (leave action unassigned)">
+      <button type="button" class="cccr-clear-key" title="Remove binding">
         <i class="fa-solid fa-trash-can"></i>
       </button>
       <button type="button" class="cccr-cancel-key" title="Cancel">
@@ -389,7 +391,6 @@ function _startInlineEdit(expandRow, element) {
   const cancelBtn = badgeArea.querySelector(".cccr-cancel-key");
   const warning   = badgeArea.querySelector(".cccr-inline-warning");
 
-  // Focus the input so keydown events reach it
   requestAnimationFrame(() => input.focus());
 
   input.addEventListener("keydown", e => {
@@ -397,19 +398,15 @@ function _startInlineEdit(expandRow, element) {
     const { code, key, ctrlKey, shiftKey, altKey } = e;
     if (key === "Escape") { cancelBtn.click(); return; }
     if (["Control","Shift","Alt","Meta"].includes(key)) return;
-
     const mods = [];
     if (ctrlKey)  mods.push("CONTROL");
     if (shiftKey) mods.push("SHIFT");
     if (altKey)   mods.push("ALT");
-
     newKey  = code;
     newMods = mods;
     const newCombo = normalizeCombo(code, mods);
     input.value    = formatCombo(newCombo);
     saveBtn.disabled = false;
-
-    // Real-time conflict check
     const conflicting = getActionsForCombo(newCombo).filter(a => a.actionId !== actionId);
     if (conflicting.length) {
       const names = conflicting.map(a => `<strong>${a.label}</strong> <em>(${a.packageTitle})</em>`).join(", ");
@@ -426,27 +423,17 @@ function _startInlineEdit(expandRow, element) {
     if (!newKey) return;
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-    // Replace the old binding with the new one in the current bindings list
     const current = game.keybindings.bindings.get(actionId) ?? [];
     let replaced  = false;
     const updated = current.map(b => {
-      if (normalizeCombo(b.key, b.modifiers ?? []) === combo) {
-        replaced = true;
-        return { key: newKey, modifiers: newMods };
-      }
+      if (normalizeCombo(b.key, b.modifiers ?? []) === combo) { replaced = true; return { key: newKey, modifiers: newMods }; }
       return b;
     });
     if (!replaced) updated.push({ key: newKey, modifiers: newMods });
-
     try {
       await game.keybindings.set(namespace, actionName, updated);
-      // Re-render Controls Configuration to reflect the change
       const app = _getState()?.controlsConfigApp;
-      if (app) {
-        // Small delay to let Foundry process the change
-        setTimeout(() => app.render(), 100);
-      }
+      if (app) setTimeout(() => app.render(), 100);
     } catch (err) {
       console.error("[CCCR] Failed to save binding:", err);
       warning.innerHTML = `<i class="fa-solid fa-xmark"></i> Save failed: ${err.message}`;
@@ -457,20 +444,13 @@ function _startInlineEdit(expandRow, element) {
     }
   });
 
-  cancelBtn.addEventListener("click", () => {
-    _restoreBadgeArea(badgeArea, actionId, combo);
-  });
+  cancelBtn.addEventListener("click", () => _restoreBadgeArea(badgeArea, actionId, combo));
 
-  // 🗑 Remove the binding entirely (leaves action unassigned for that combo)
   clearBtn.addEventListener("click", async () => {
     clearBtn.disabled = true;
     clearBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
     const current  = game.keybindings.bindings.get(actionId) ?? [];
-    const filtered = current.filter(b =>
-      normalizeCombo(b.key, b.modifiers ?? []) !== combo
-    );
-
+    const filtered = current.filter(b => normalizeCombo(b.key, b.modifiers ?? []) !== combo);
     try {
       await game.keybindings.set(namespace, actionName, filtered);
       const app = _getState()?.controlsConfigApp;
@@ -490,7 +470,6 @@ function _restoreBadgeArea(badgeArea, actionId, combo) {
   const editable     = _isBindingEditable(actionId, combo);
   const comboDisplay = formatCombo(combo);
   const [namespace]  = actionId.split(".");
-  const meta         = getActionMeta(actionId);
 
   badgeArea.innerHTML = `
     <kbd class="cccr-badge cccr-badge-warn">
@@ -498,99 +477,68 @@ function _restoreBadgeArea(badgeArea, actionId, combo) {
     </kbd>
     ${editable
       ? `<button type="button" class="cccr-expand-go cccr-find-btn"
-                 data-namespace="${namespace}" data-action-id="${actionId}"
-                 title="Navigate to this action's category">
+                 data-namespace="${namespace}" data-action-id="${actionId}">
            <i class="fa-solid fa-arrow-right"></i>
          </button>
-         <button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit"
-                 title="Edit this binding here">
+         <button type="button" class="cccr-expand-edit cccr-find-btn cccr-btn-edit">
            <i class="fa-solid fa-pen-to-square"></i>
          </button>`
-      : `<span class="cccr-locked-badge" title="This binding is locked">
-           <i class="fa-solid fa-lock"></i>
-         </span>`
-    }`;
+      : `<span class="cccr-locked-badge"><i class="fa-solid fa-lock"></i></span>`}`;
 
   badgeArea.querySelector(".cccr-expand-edit")?.addEventListener("click", e => {
     e.stopPropagation();
     const expandRow = badgeArea.closest(".cccr-expand-row");
     if (expandRow) _startInlineEdit(expandRow, null);
   });
-
   badgeArea.querySelector(".cccr-expand-go")?.addEventListener("click", e => {
     e.stopPropagation();
     const state = _getState();
     if (state) state.pendingHighlight = { actionId, combo, autoEdit: false };
-    const appEl = badgeArea.closest(".window-app, .application") ?? document;
-    _navigateToCategory(namespace, appEl, state);
+    _navigateToCategory(namespace, badgeArea.closest(".window-app, .application") ?? document, state);
   });
 }
 
 // ---------------------------------------------------------------------------
-// 6. Pending highlight (navigate + scroll/flash)
+// 6. Pending highlight
 // ---------------------------------------------------------------------------
 
 function _processPendingHighlight(element, state) {
   const { actionId, combo, autoEdit } = state.pendingHighlight;
   state.pendingHighlight = null;
-
   let attempts = 0;
-  const MAX_ATTEMPTS = 8;
-  const INTERVAL_MS  = 150;
-
   const tryHighlight = () => {
     attempts++;
     for (const row of _actionRows(element)) {
       if (_actionId(row, element) !== actionId) continue;
-
-      // Scroll using the real scrollable container, not the window
       _scrollToRow(row);
-
       row.classList.add("cccr-highlight-action");
       setTimeout(() => row.classList.remove("cccr-highlight-action"), 2500);
-
       if (autoEdit) {
         setTimeout(() => {
           const btns = [...row.querySelectorAll(
-            "a.control.edit, button[data-action='editBinding'], " +
-            ".fa-pen, .fa-edit, .fa-pen-to-square, button[title*='dit'], a[title*='dit']"
+            "a.control.edit, button[data-action='editBinding'], .fa-pen, .fa-edit, .fa-pen-to-square, button[title*='dit'], a[title*='dit']"
           )];
           (btns[0]?.closest("button,a") ?? btns[0])?.click();
         }, 400);
       }
-      return; // success — stop retrying
+      return;
     }
-
-    if (attempts < MAX_ATTEMPTS) setTimeout(tryHighlight, INTERVAL_MS);
-    // silently give up after max attempts
+    if (attempts < 8) setTimeout(tryHighlight, 150);
   };
-
-  // Initial small delay so the DOM has time to render the new category
   setTimeout(tryHighlight, 120);
 }
 
-/**
- * Scroll a row into view using its real scrollable ancestor.
- * scrollIntoView() on large lists often scrolls the window instead of the
- * panel's inner scroll container, so the row never becomes visible.
- */
 function _scrollToRow(row) {
-  // Walk up to find the first scrollable ancestor
   let container = row.parentElement;
   while (container && container !== document.body) {
     const { overflow, overflowY } = window.getComputedStyle(container);
-    if (/auto|scroll/.test(overflow + overflowY) &&
-        container.scrollHeight > container.clientHeight) break;
+    if (/auto|scroll/.test(overflow + overflowY) && container.scrollHeight > container.clientHeight) break;
     container = container.parentElement;
   }
-
   if (container && container !== document.body) {
-    // Center the row inside the scrollable container
-    const targetTop = row.offsetTop - container.offsetTop;
-    const center    = targetTop - (container.clientHeight / 2) + (row.offsetHeight / 2);
+    const center = row.offsetTop - container.offsetTop - (container.clientHeight / 2) + (row.offsetHeight / 2);
     container.scrollTo({ top: Math.max(0, center), behavior: "smooth" });
   } else {
-    // Fallback for edge cases
     row.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 }
@@ -607,16 +555,12 @@ function _navigateToCategory(namespace, element, state) {
     nativeSearch.dispatchEvent(new Event("input",  { bubbles: true }));
     nativeSearch.dispatchEvent(new Event("change", { bubbles: true }));
   }
-
   const app = state?.controlsConfigApp ?? _getState()?.controlsConfigApp;
   if (app) {
     for (const method of ["changeTab","selectCategory","_activateTab"]) {
-      if (typeof app[method] === "function") {
-        try { app[method](namespace); return; } catch(_) {}
-      }
+      if (typeof app[method] === "function") { try { app[method](namespace); return; } catch(_) {} }
     }
   }
-
   const sidebar = _sidebar(element);
   if (!sidebar) return;
   for (const sel of [`[data-id="${namespace}"]`,`[data-tab="${namespace}"]`,`[data-category="${namespace}"]`]) {
@@ -625,9 +569,7 @@ function _navigateToCategory(namespace, element, state) {
   }
   const meta = getActionMeta(`${namespace}.__x__`);
   for (const item of sidebar.querySelectorAll("li, button, [role='tab'], a")) {
-    if (item.textContent.replace(/\s*\[.*?\]/g,"").trim() === meta.packageTitle) {
-      item.click(); return;
-    }
+    if (item.textContent.replace(/\s*\[.*?\]/g,"").trim() === meta.packageTitle) { item.click(); return; }
   }
 }
 
@@ -658,14 +600,19 @@ function _injectSidebarBadge(element, state) {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Real-time edit warning (Foundry's native edit input)
+// 9. Real-time edit warning (Foundry native edit input)
 // ---------------------------------------------------------------------------
 
 function _setupEditObserver(element, state) {
   state.editObserver?.disconnect();
   const main = _main(element);
   if (!main) return;
-  let currentWarning = null;
+
+  let currentWarning      = null;
+  let currentSuggestNote  = null;
+  let currentEditActionId = null;
+  let currentEditSnapshot = null;
+
   state.editObserver = new MutationObserver(mutations => {
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
@@ -678,13 +625,38 @@ function _setupEditObserver(element, state) {
         for (const inp of inputs) {
           if (inp.dataset.cccrWatched) continue;
           inp.dataset.cccrWatched = "1";
-          currentWarning = _watchEditInput(inp, element);
+          const actionRow = inp.closest(
+            "li[data-id],li[data-action-id],li.entry.keybinding,li.keybinding-action,li.action,li.entry,[data-keybinding]"
+          );
+          currentEditActionId = actionRow ? _actionId(actionRow, element) : null;
+          if (currentEditActionId) {
+            currentEditSnapshot = foundry.utils.deepClone(game.keybindings.bindings.get(currentEditActionId) ?? []);
+          }
+          const result = _watchEditInput(inp, element, currentEditActionId);
+          currentWarning    = result.warning;
+          currentSuggestNote = result.suggestNote;
         }
       }
       for (const node of mut.removedNodes) {
         if (!(node instanceof HTMLElement)) continue;
-        if (currentWarning && (node.matches("input") || node.querySelector("input"))) {
-          currentWarning.remove(); currentWarning = null;
+        if (currentWarning && (node.matches("input") || node.querySelector?.("input"))) {
+          currentWarning.remove();
+          currentSuggestNote?.remove();
+          currentWarning = currentSuggestNote = null;
+
+          // Detect suggest-mode override: binding changed while editing
+          if (currentEditActionId && currentEditSnapshot !== null) {
+            const globals = getGlobalBindings();
+            const isGlobal = !!globals[currentEditActionId];
+            if (isGlobal && getGlobalMode() === "suggest") {
+              const newBindings = game.keybindings.bindings.get(currentEditActionId) ?? [];
+              const oldNorm = currentEditSnapshot.map(b => normalizeCombo(b.key, b.modifiers ?? [])).sort().join("|");
+              const newNorm = newBindings.map(b => normalizeCombo(b.key, b.modifiers ?? [])).sort().join("|");
+              if (oldNorm !== newNorm) markUserOverride(currentEditActionId);
+            }
+          }
+          currentEditActionId = null;
+          currentEditSnapshot = null;
         }
       }
     }
@@ -692,12 +664,38 @@ function _setupEditObserver(element, state) {
   state.editObserver.observe(main, { childList: true, subtree: true });
 }
 
-function _watchEditInput(input, element) {
-  const actionRow   = input.closest("li[data-id],li[data-action-id],li.entry,[data-keybinding]");
-  const ownActionId = actionRow ? _actionId(actionRow, element) : null;
-  const warning     = document.createElement("div");
-  warning.className = "cccr-edit-warning"; warning.style.display = "none";
+function _watchEditInput(input, element, ownActionId) {
+  if (ownActionId === undefined || ownActionId === null) {
+    const actionRow = input.closest(
+      "li[data-id],li[data-action-id],li.entry.keybinding,li.keybinding-action,li.action,li.entry,[data-keybinding]"
+    );
+    ownActionId = actionRow ? _actionId(actionRow, element) : null;
+  }
+
+  const globals     = getGlobalBindings();
+  const globalMode  = getGlobalMode();
+  const isGlobal    = ownActionId ? !!globals[ownActionId] : false;
+
+  // Dynamic conflict warning (hidden until user presses a key)
+  const warning = document.createElement("div");
+  warning.className = "cccr-edit-warning";
+  warning.style.display = "none";
   input.insertAdjacentElement("afterend", warning);
+
+  // Static GM-policy note shown immediately when edit input opens
+  let suggestNote = null;
+  if (isGlobal) {
+    suggestNote = document.createElement("div");
+    if (globalMode === "locked") {
+      suggestNote.className = "cccr-edit-warning cccr-edit-locked-note";
+      suggestNote.innerHTML = `<i class="fa-solid fa-lock"></i> This keybinding has been locked by the GM. Changes will not be saved.`;
+    } else {
+      suggestNote.className = "cccr-edit-warning cccr-edit-suggest-note";
+      suggestNote.innerHTML = `<i class="fa-solid fa-lock-open"></i> This keybinding was set as default by the GM. Your changes will be saved for your account only.`;
+    }
+    warning.insertAdjacentElement("afterend", suggestNote);
+  }
+
   input.addEventListener("keydown", e => {
     const { code, key, ctrlKey, shiftKey, altKey } = e;
     if (["Control","Shift","Alt","Meta","Escape"].includes(key)) return;
@@ -717,21 +715,298 @@ function _watchEditInput(input, element) {
     }
     warning.style.display = "";
   });
-  return warning;
+
+  return { warning, suggestNote };
+}
+
+// ---------------------------------------------------------------------------
+// 10. Global keybinding icons
+// ---------------------------------------------------------------------------
+
+function _injectGlobalIcons(element, state) {
+  const globals    = getGlobalBindings();
+  const globalMode = getGlobalMode();
+  const isGM       = game.user.isGM;
+  const overrides  = isGM ? {} : getUserOverrides();
+
+  for (const row of _actionRows(element)) {
+    // Skip rows that already have our button (partial re-render guard)
+    if (row.querySelector(".cccr-global-btn")) continue;
+
+    const actionId = _actionId(row, element);
+    if (!actionId) continue;
+
+    const entry = globals[actionId] ?? null;
+    const btn   = _buildGlobalBtn(actionId, entry, isGM, overrides, globalMode);
+
+    // V14 ControlsConfig: action name lives in span.label inside div.form-group.
+    // Fallback chain: span.label > header > h3/h4 > label element > row itself.
+    const target = row.querySelector("span.label")
+      ?? row.querySelector("header, .entry-header, .action-header")
+      ?? row.querySelector("h3, h4, label.entry-label, label, .action-name, .name")
+      ?? row;
+    target.appendChild(btn);
+  }
+
+  _interceptLockedEdits(element, globals, globalMode);
+}
+
+function _buildGlobalBtn(actionId, entry, isGM, overrides, globalMode) {
+  const isActive = !!entry;
+
+  const btn = document.createElement("button");
+  btn.type  = "button";
+  btn.dataset.actionId   = actionId;
+  btn.dataset.cccrGlobal = "1";
+
+  const classes = ["cccr-global-btn"];
+  if (isActive) classes.push("cccr-global-active", `cccr-global-${globalMode}`);
+  btn.className = classes.join(" ");
+
+  // Closed lock = locked mode (red). Open lock = inactive or suggest (white).
+  const lockClass = (isActive && globalMode === "locked") ? "fa-lock" : "fa-lock-open";
+  btn.innerHTML = `<i class="fa-solid ${lockClass}"></i>`;
+
+  if (isGM) {
+    btn.title = isActive
+      ? `Global keybinding (${globalMode === "locked" ? "Locked" : "Default"}) — click to manage`
+      : "Set as global keybinding for all users";
+    btn.addEventListener("click", e => {
+      e.preventDefault(); e.stopPropagation();
+      _openGlobalDialog(actionId, entry);
+    });
+  } else if (isActive && globalMode === "suggest" && overrides[actionId]) {
+    // User has overridden a suggest binding: clickable for reset
+    btn.classList.add("cccr-global-overridden");
+    btn.title = "GM-suggested keybinding (you have a custom binding) — click to reset";
+    btn.addEventListener("click", e => {
+      e.preventDefault(); e.stopPropagation();
+      _openResetDialog(actionId, entry);
+    });
+  } else {
+    btn.title = isActive
+      ? (globalMode === "locked"
+          ? "This keybinding has been locked by the GM"
+          : "This keybinding was set as default by the GM")
+      : "";
+    btn.style.pointerEvents = "none";
+    btn.style.cursor = "default";
+  }
+
+  return btn;
+}
+
+// ---------------------------------------------------------------------------
+// 11. GM dialog — create or manage global policy
+//     Mode comes from module settings, NOT selected per-action.
+//     Empty bindings (no hotkey) are allowed.
+// ---------------------------------------------------------------------------
+
+async function _openGlobalDialog(actionId, entry) {
+  const { DialogV2 } = foundry.applications.api;
+  const meta       = getActionMeta(actionId);
+  const bindings   = game.keybindings.bindings.get(actionId) ?? [];
+  const globalMode = getGlobalMode();
+
+  const currentDisplay = bindings.length
+    ? bindings.map(b => formatCombo(normalizeCombo(b.key, b.modifiers ?? []))).join(", ")
+    : "(no binding)";
+
+  const modeLabel = globalMode === "locked"
+    ? "Locked — users cannot change this binding"
+    : "Default — users can override this binding";
+
+  if (!entry) {
+    // ---- Create: no existing global policy ----
+    const bindingLine = bindings.length
+      ? `<p>Binding to apply: <kbd class="cccr-badge">${currentDisplay}</kbd></p>`
+      : `<p>Policy: remove any existing binding for this action on all users.</p>`;
+
+    await DialogV2.wait({
+      window: { title: `Set Global Keybinding: ${meta.label}` },
+      content: `
+        <div class="cccr-global-dialog">
+          <p>Apply a global keybinding policy for <strong>${meta.label}</strong>
+             <em>(${meta.packageTitle})</em> to all users in this world?</p>
+          ${bindingLine}
+          <p class="cccr-global-hint">Enforcement mode: <strong>${modeLabel}</strong><br>
+             (Change via Module Settings to affect all global keybindings)</p>
+        </div>`,
+      buttons: [
+        {
+          label:    "Apply Globally",
+          action:   "apply",
+          callback: async (event, button) => {
+            await setGlobalBinding(actionId, bindings);
+            setTimeout(() => _getState()?.controlsConfigApp?.render({ force: true }), 200);
+          }
+        },
+        { label: "Cancel", action: "cancel" }
+      ]
+    });
+
+  } else {
+    // ---- Manage: existing global policy ----
+    const storedDisplay = entry.bindings.length
+      ? entry.bindings.map(b => formatCombo(normalizeCombo(b.key, b.modifiers ?? []))).join(", ")
+      : "(no binding)";
+
+    const sessionDiffers = currentDisplay !== storedDisplay;
+    const updateRow = sessionDiffers
+      ? `<div class="cccr-global-field">
+           <label>
+             <input type="checkbox" name="updateBinding">
+             Update to current session value
+             (<kbd class="cccr-badge">${currentDisplay}</kbd>)
+           </label>
+         </div>`
+      : "";
+
+    await DialogV2.wait({
+      window: { title: `Manage Global: ${meta.label}` },
+      content: `
+        <div class="cccr-global-dialog">
+          <p>Global policy for <strong>${meta.label}</strong>
+             <em>(${meta.packageTitle})</em>:</p>
+          <p>Stored binding: <kbd class="cccr-badge">${storedDisplay}</kbd></p>
+          <p class="cccr-global-hint">Mode: <strong>${modeLabel}</strong><br>
+             (Change via Module Settings)</p>
+          ${sessionDiffers ? `<hr class="cccr-global-hr">` : ""}
+          ${updateRow}
+        </div>`,
+      buttons: [
+        {
+          label:    "Update",
+          action:   "update",
+          callback: async (event, button) => {
+            // Read checkbox via button.closest — works regardless of V14 dialog arg type
+            const root     = button.closest("form") ?? button.closest(".application, dialog");
+            const doUpdate = root?.querySelector("input[name='updateBinding']")?.checked ?? false;
+            const newBinds = doUpdate ? bindings : entry.bindings;
+            await setGlobalBinding(actionId, newBinds);
+            setTimeout(() => _getState()?.controlsConfigApp?.render({ force: true }), 200);
+          }
+        },
+        {
+          label:    "Remove Policy",
+          action:   "remove",
+          callback: async () => {
+            await removeGlobalBinding(actionId);
+            setTimeout(() => _getState()?.controlsConfigApp?.render({ force: true }), 200);
+          }
+        },
+        { label: "Cancel", action: "cancel" }
+      ]
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 12. Non-GM reset dialog
+// ---------------------------------------------------------------------------
+
+async function _openResetDialog(actionId, entry) {
+  const { DialogV2 } = foundry.applications.api;
+  const meta    = getActionMeta(actionId);
+  const display = entry.bindings.length
+    ? entry.bindings.map(b => formatCombo(normalizeCombo(b.key, b.modifiers ?? []))).join(", ")
+    : "(no binding)";
+
+  const result = await DialogV2.wait({
+    window: { title: `Reset to GM Default: ${meta.label}` },
+    content: `
+      <div class="cccr-global-dialog">
+        <p>Reset <strong>${meta.label}</strong> to the GM-suggested binding?</p>
+        <p>GM default: <kbd class="cccr-badge">${display}</kbd></p>
+        <p>Your custom binding will be replaced.</p>
+      </div>`,
+    buttons: [
+      { label: "Reset to Default", action: "reset"  },
+      { label: "Keep My Binding",  action: "cancel" }
+    ]
+  });
+
+  if (result === "reset") {
+    const [namespace, ...rest] = actionId.split(".");
+    try {
+      await clearUserOverride(actionId);
+      await game.keybindings.set(namespace, rest.join("."), entry.bindings);
+      setTimeout(() => _getState()?.controlsConfigApp?.render({ force: true }), 200);
+    } catch (err) {
+      console.error("[CCCR] Failed to reset binding:", err);
+      ui.notifications.error(`Failed to reset "${meta.label}": ${err.message}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 13. Locked-edit interceptor (only active when global mode is "locked")
+// ---------------------------------------------------------------------------
+
+function _interceptLockedEdits(element, globals, globalMode) {
+  // Remove previous listener first (element reference is reused across re-renders)
+  if (element._cccrLockHandler) {
+    element.removeEventListener("click", element._cccrLockHandler, true);
+    delete element._cccrLockHandler;
+  }
+
+  // In suggest mode users are allowed to edit — no interception needed
+  if (globalMode !== "locked") return;
+
+  const lockedIds = new Set(Object.keys(globals));
+  if (!lockedIds.size) return;
+
+  element._cccrLockHandler = (ev) => {
+    if (ev.target.closest(
+      ".cccr-global-btn, .cccr-expand-panel, .cccr-trigger, .cccr-inline-edit"
+    )) return;
+
+    const control = ev.target.closest("a.control, button[data-action], button[type='button']");
+    if (!control || control.dataset.cccrGlobal) return;
+
+    const row = control.closest(
+      "div.form-group[data-action-id], div[data-action-id], " +
+      "li[data-id], li[data-action-id], li.entry, li.keybinding-action"
+    );
+    if (!row) return;
+
+    const actionId = _tryActionId(row, element);
+    if (!actionId || !lockedIds.has(actionId)) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    const meta = getActionMeta(actionId);
+    ui.notifications.warn(
+      `"${meta.label}" — This keybinding has been locked by the GM and cannot be changed.`
+    );
+  };
+
+  element.addEventListener("click", element._cccrLockHandler, true);
 }
 
 // ---------------------------------------------------------------------------
 // DOM helpers
 // ---------------------------------------------------------------------------
 
-function _main(el)    { return el.querySelector("[data-application-part='main'], .category-browser-main, .entry-list-container, section.main, .entries-wrapper"); }
-function _sidebar(el) { return el.querySelector("[data-application-part='sidebar'], .category-browser-sidebar, .sidebar, aside"); }
+function _main(el)    {
+  return el.querySelector(
+    "[data-application-part='main'], .category-browser-main, " +
+    ".entry-list-container, section.main, .entries-wrapper"
+  );
+}
+function _sidebar(el) {
+  return el.querySelector(
+    "[data-application-part='sidebar'], .category-browser-sidebar, .sidebar, aside"
+  );
+}
 
 function _actionRows(element) {
   const main = _main(element);
   if (!main) return [];
   const p = [...main.querySelectorAll(
-    "li[data-id],li[data-action-id],li[data-entry-id],li.entry.keybinding,li.keybinding-action,li.action,li.entry,div[data-id],div[data-action-id]"
+    "li[data-id],li[data-action-id],li[data-entry-id],li.entry.keybinding," +
+    "li.keybinding-action,li.action,li.entry,div[data-id],div[data-action-id]"
   )].filter(el => !el.classList.contains("cccr-expand-panel"));
   if (p.length) return p;
   return [...main.querySelectorAll("li")].filter(el =>

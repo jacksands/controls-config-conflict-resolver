@@ -1,6 +1,6 @@
 # Controls Configuration Conflict Resolver
 
-Enhances Foundry's native **Controls Configuration** window with exact conflict identification, combo-key search, and one-click navigation to conflicting bindings.
+Enhances Foundry's native **Controls Configuration** window with exact conflict identification, combo-key search, one-click navigation to conflicting bindings, and GM-defined global keybinding policies.
 
 ---
 
@@ -10,6 +10,7 @@ Foundry's Controls Configuration shows `⚠` warnings like "Potentially conflict
 - "Copy" in the tooltip might refer to the **browser's** Ctrl+C, while the real conflict is with a completely different module's "Copy" action using Shift+C
 - There's no way to see exactly which action from which module is the real conflict
 - Finding and editing both conflicting bindings requires manually hunting through different categories
+- There is no built-in way for a GM to enforce consistent keybindings across all players
 
 ---
 
@@ -59,6 +60,45 @@ A small note at the top of the main panel explains that **some conflicts are har
 
 The bottom of the sidebar shows the total number of detected conflicts. Click it to open the **Conflict Overview** window with a full list grouped by key combo.
 
+### 6. Global Keybindings *(GM only to configure)*
+
+A small **world + lock icon** appears at the start of every action row. GMs use this to define world-wide keybinding policies. Non-GM players see the icon as a visual indicator only.
+
+**Settings are stored server-side** (scope: world for policies, scope: user for per-player overrides). They are not tied to any browser — switching browsers or computers does not lose settings. They also survive module disable/re-enable cycles.
+
+#### How to set a global keybinding (GM)
+
+1. In Controls Configuration, change an action's binding to the value you want all users to have.
+2. Click the **world + lock icon** at the start of that action row.
+3. A dialog opens:
+   - **Binding to apply**: shows the current binding that will be stored and distributed.
+   - **Enforcement mode**: choose one of:
+     - **Locked** — the binding is forced on all users. They cannot edit or delete it. If they try, a warning message is shown: *"This keybinding has been locked by the GM and cannot be changed."*
+     - **Default** — the binding is applied to users who have not customized it. Users who later edit the binding see: *"This keybinding was set as default by the GM. Your changes will be saved for your account only."* They can override it, and their preference is remembered for future sessions.
+4. Click **Apply Globally**. The policy takes effect immediately for all connected users via the world setting sync. Users who are not currently connected receive it on their next login.
+
+#### Managing an existing global policy (GM)
+
+Click the active (colored, pulsing) icon on a row that already has a global policy. A management dialog appears:
+
+- View the currently stored binding and mode.
+- **Change mode**: switch between Locked and Default.
+- **Update stored binding**: if you changed the binding in your current session, a checkbox lets you push that new value to all users.
+- **Remove Global Policy**: clears the policy. Users keep whatever binding they currently have; no enforcement is applied going forward.
+
+#### Icon states
+
+| Icon appearance | Meaning |
+|---|---|
+| Muted gray, no glow | No global policy for this action |
+| Amber, pulsing (Locked) | Binding is locked — users cannot change it |
+| Blue, pulsing (Default) | Binding is set as default — users can override |
+| Dashed border, amber-brown *(non-GM only)* | You have overridden a GM default — click to reset |
+
+#### Resetting to GM default (non-GM players)
+
+If a GM has set a binding as **Default** and you later change it, the icon changes to a dashed amber-brown state. Click it and choose **Reset to Default** to re-apply the GM's suggested binding and clear your override flag.
+
 ---
 
 ## How to Resolve a Conflict
@@ -83,6 +123,8 @@ Two or more Foundry keybindings registered via `game.keybindings.register()` usi
 
 ## Access
 
-All players can use this module. No GM required.
+All players can use conflict detection, combo search, and inline editing. No GM required.
 
 Open the Conflict Overview any time via **Settings → Module Settings → Controls Configuration Conflict Resolver → Open Conflict Overview**.
+
+The **Global Keybindings** feature (world + lock icons) is visible to all users but configurable only by GMs.

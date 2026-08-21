@@ -1,10 +1,10 @@
 {
   "id": "controls-config-conflict-resolver",
   "title": "Controls Configuration Conflict Resolver",
-  "description": "Enhances the Controls Configuration with inline conflict rows, combo-key search, inline binding editing, and real-time edit warnings.",
-  "version": "1.1.0",
+  "description": "Enhances the Controls Configuration with inline conflict rows, combo-key search, inline binding editing, real-time edit warnings, and GM-defined global keybinding policies.",
+  "version": "1.2.0",
   "compatibility": {
-    "minimum": 14,
+    "minimum": "14",
     "verified": "14.360"
   },
   "esmodules": [
@@ -15,12 +15,6 @@
     "styles/theme-navy.css"
   ],
   "authors": [
-    {
-      "name": "Jack Sands"
-    }
-  ],
-  "flags": {},
-  "url": "https://github.com/jacksands/controls-config-conflict-resolver",
-  "manifest": "https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json",
-  "download": "https://github.com/jacksands/controls-config-conflict-resolver/archive/refs/heads/main.zip"
+    { "name": "Jack Sands" }
+  ]
 }
