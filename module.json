@@ -16,5 +16,9 @@
   ],
   "authors": [
     { "name": "Jack Sands" }
-  ]
+  ],
+    "url": "https://github.com/jacksands/controls-config-conflict-resolver",
+  "manifest": "https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json",
+  "download": "https://github.com/jacksands/resizable-camera-bar/archive/refs/heads/main.zip"
+}
 }
