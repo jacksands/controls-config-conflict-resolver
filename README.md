@@ -80,7 +80,7 @@ Two or more Foundry keybindings registered via `game.keybindings.register()` usi
 Paste the following URL into Foundry's *Install Module* dialog:
 
 ```
-[https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json](https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json)
+https://raw.githubusercontent.com/jacksands/controls-config-conflict-resolver/refs/heads/main/module.json
 ```
 
 **Method 2 — Manual**
